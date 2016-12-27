@@ -25,6 +25,7 @@
 #  F  F2  Fc     B  B2  Bc     U  U2  Uc     D  D2  Dc     L  L2  Lc     R  R2  Rc
 #  0   1   2     3   4   5     6   7   8     9  10  11    12  13  14    15  16  17
 
+
 def circ(k, indices):  # circulate cubies on indices
     temp = k[indices[-1]]
     for i in range(len(indices) - 1)[::-1]:
@@ -63,6 +64,40 @@ def epos(cube, indices):  # reposition edges
         circ(i, indices)
     return cube
 
+
+def rewrite_moves(string):
+    moves = string.split()
+    faces = ["f", "F", "b", "B", "u", "U", "d", "D", "l", "L", "r", "R"]
+    numlist = []
+    for m in moves:
+        num = 0
+        for i in range(12):
+            if faces[i] in m:
+                num += 3 * (i / 2)
+                break
+        if "2" in m:
+            num += 1
+        elif "c" in m:
+            num += 2
+        elif "'" in m:
+            num += 2
+        numlist.append(num)
+    return numlist
+
+
+def rewrite_numbers(numlist):
+    faces = ["F", "B", "U", "D", "L", "R"]
+    movelist = []
+    for num in numlist:
+        m = ""
+        m += faces[num/3]
+        if num % 3 == 1:
+            m += "2"
+        elif num % 3 == 2:
+            m += "'"
+        movelist.append(m)
+    moves = " ".join(movelist)
+    return moves
 
 
 def printit(cube):  # print cube
