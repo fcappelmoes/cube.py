@@ -63,27 +63,6 @@ def epos(cube, indices):  # reposition edges
         circ(i, indices)
     return cube
 
-def move(cube, l):
-    # table[moves][axis, corners, edges]
-    table = [[[0, 1, 5, 4], [8, 5, 11, 4]],
-             [[2, 3, 7, 6], [9, 7, 10, 6]],
-             [[3, 2, 1, 0], [9, 1, 8, 0]],
-             [[4, 5, 6, 7], [11, 2, 10, 3]],
-             [[3, 0, 4, 7], [0, 4, 3, 7]],
-             [[1, 2, 6, 5], [1, 6, 2, 5]]]
-    if not type(l) == list:
-        l = [l]
-    for m in l:
-        depth = m % 3 + 1
-        face = m / 3
-        axis = face / 2
-        for j in range(depth):
-            if axis != 1:
-                crot(cube, table[face][0])
-            erot(cube, axis, table[face][1])
-            cpos(cube, table[face][0])
-            epos(cube, table[face][1])
-    return cube
 
 
 def printit(cube):  # print cube
@@ -101,5 +80,27 @@ class Cube(object):
             self.en = ["ul", "ur", "dr", "dl", "fl", "fr", "br", "bl", "uf", "ub", "db", "df"]
             self.ep = [i for i in range(12)]
             self.er = [True for i in range(12)]
+
+    def move(self, l):
+        # table[moves][axis, corners, edges]
+        table = [[[0, 1, 5, 4], [8, 5, 11, 4]],
+                 [[2, 3, 7, 6], [9, 7, 10, 6]],
+                 [[3, 2, 1, 0], [9, 1, 8, 0]],
+                 [[4, 5, 6, 7], [11, 2, 10, 3]],
+                 [[3, 0, 4, 7], [0, 4, 3, 7]],
+                 [[1, 2, 6, 5], [1, 6, 2, 5]]]
+        if not type(l) == list:
+            l = [l]
+        for m in l:
+            depth = m % 3 + 1
+            face = m / 3
+            axis = face / 2
+            for j in range(depth):
+                if axis != 1:
+                    crot(self, table[face][0])
+                erot(self, axis, table[face][1])
+                cpos(self, table[face][0])
+                epos(self, table[face][1])
+        return self
 
 
