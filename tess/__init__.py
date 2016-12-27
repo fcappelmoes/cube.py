@@ -1,1 +1,1 @@
-import test
+import cube

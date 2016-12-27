@@ -102,7 +102,4 @@ class Cube(object):
             self.ep = [i for i in range(12)]
             self.er = [True for i in range(12)]
 
-c = Cube(3)
-move(c, [6, 16, 0, 3, 15, 4, 15, 7, 12, 4, 15, 8, 11, 16, 0, 17, 12, 4, 7, 1])
-printit(c)
 
