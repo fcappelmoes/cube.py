@@ -25,6 +25,8 @@
 #  F  F2  Fc     B  B2  Bc     U  U2  Uc     D  D2  Dc     L  L2  Lc     R  R2  Rc
 #  0   1   2     3   4   5     6   7   8     9  10  11    12  13  14    15  16  17
 
+import numpy
+
 
 def circ(k, indices):  # circulate cubies on indices
     temp = k[indices[-1]]
@@ -33,59 +35,72 @@ def circ(k, indices):  # circulate cubies on indices
     k[indices[0]] = temp
     return k
 
+matrix1 = [[0, 0, 0, 1], [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]]
+matrix2 = numpy.dot(matrix1, matrix1)
+matrix3 = numpy.dot(matrix2, matrix1)
+mlist = [matrix1, matrix2, matrix3]
 
-def crot(cube, indices):  # rotate corners if not in up or down face
-    for i in range(0, len(indices), 2):
-        cube.cr[indices[i]] = (cube.cr[indices[i]] + 2) % 3
-    for i in range(1, len(indices), 2):
-        cube.cr[indices[i]] = (cube.cr[indices[i]] + 1) % 3
+def newcirc(k, indices, depth):
+    m = []
+    for i in indices:
+        m.extend([k[i]])
+    newm = numpy.dot(mlist[depth], m)
+    for i in range(len(indices)):
+        k[indices[i]] = newm[i]
+    return k
+
+
+def crot(cube, axis, indices, depth):  # rotate corners if not in up or down face
+    if depth != 1 and axis != 1:
+        for i in range(0, len(indices), 2):
+            cube.cr[indices[i]] = (cube.cr[indices[i]] + 2) % 3
+        for i in range(1, len(indices), 2):
+            cube.cr[indices[i]] = (cube.cr[indices[i]] + 1) % 3
     return cube
 
 
-def erot(cube, axis, indices):  # rotate edges
-    a = 0 + 4 * axis
-    b = 4 + 4 * axis
-    m = [cube.ep[i] for i in indices]
-    for cubie in range(a, b):
-        if cubie in m:
-            i = cube.ep.index(cubie)
-            cube.er[i] = not cube.er[i]
+def erot(cube, axis, indices, depth):  # rotate edges
+    if depth != 1:
+        a = 0 + 4 * axis
+        b = 4 + 4 * axis
+        m = [cube.ep[i] for i in indices]
+        for cubie in range(a, b):
+            if cubie in m:
+                i = cube.ep.index(cubie)
+                cube.er[i] = not cube.er[i]
+        return cube
+
+
+def cpos(cube, indices, depth):  # reposition corners
+    for i in [cube.cp, cube.cr]:
+        newcirc(i, indices, depth)
     return cube
 
 
-def cpos(cube, indices):  # reposition corners
-    for i in [cube.cn, cube.cp, cube.cr]:
-        circ(i, indices)
+def epos(cube, indices, depth):  # reposition edges
+    for i in [cube.ep, cube.er]:
+        newcirc(i, indices, depth)
     return cube
 
 
-def epos(cube, indices):  # reposition edges
-    for i in [cube.en, cube.ep, cube.er]:
-        circ(i, indices)
-    return cube
-
-
-def rewrite_moves(string):
-    moves = string.split()
-    faces = ["f", "F", "b", "B", "u", "U", "d", "D", "l", "L", "r", "R"]
+def parse_moves(string):
+    moves = string.lower().split()
+    faces = ["f", "b", "u", "d", "l", "r"]
+    facedict = {faces[i]: i for i in range(6)}
     numlist = []
     for m in moves:
         num = 0
-        for i in range(12):
-            if faces[i] in m:
-                num += 3 * (i / 2)
-                break
-        if "2" in m:
+        if m[0] in faces:
+            num = facedict[m]
+        if m == "2":
             num += 1
-        elif "c" in m:
-            num += 2
-        elif "'" in m:
+        elif m[1] == "c" or m[1] == "'":
             num += 2
         numlist.append(num)
     return numlist
 
 
-def rewrite_numbers(numlist):
+def present_moves(numlist):
     faces = ["F", "B", "U", "D", "L", "R"]
     movelist = []
     for num in numlist:
@@ -101,41 +116,38 @@ def rewrite_numbers(numlist):
 
 
 def printit(cube):  # print cube
-    for i in [cube.cn, cube.cp, cube.cr, cube.en, cube.ep, cube.er]:
+    for i in [cube.cp, cube.cr, cube.ep, cube.er]:
         print i
 
 
 class Cube(object):
     def __init__(self, size):
         self.size = size
-        self.cn = ["ufl", "ufr", "ubr", "ubl", "dfl", "dfr", "dbr", "dbl"]
         self.cp = [i for i in range(8)]
         self.cr = [0] * 8
         if size == 3:
-            self.en = ["ul", "ur", "dr", "dl", "fl", "fr", "br", "bl", "uf", "ub", "db", "df"]
             self.ep = [i for i in range(12)]
             self.er = [True for i in range(12)]
 
-    def move(self, l):
-        # table[moves][axis, corners, edges]
-        table = [[[0, 1, 5, 4], [8, 5, 11, 4]],
-                 [[2, 3, 7, 6], [9, 7, 10, 6]],
-                 [[3, 2, 1, 0], [9, 1, 8, 0]],
-                 [[4, 5, 6, 7], [11, 2, 10, 3]],
-                 [[3, 0, 4, 7], [0, 4, 3, 7]],
-                 [[1, 2, 6, 5], [1, 6, 2, 5]]]
-        if not type(l) == list:
-            l = [l]
-        for m in l:
-            depth = m % 3 + 1
+    # table[moves][axis, corners, edges]
+    table = [[[0, 1, 5, 4], [8, 5, 11, 4]],
+             [[2, 3, 7, 6], [9, 7, 10, 6]],
+             [[3, 2, 1, 0], [9, 1, 8, 0]],
+             [[4, 5, 6, 7], [11, 2, 10, 3]],
+             [[3, 0, 4, 7], [0, 4, 3, 7]],
+             [[1, 2, 6, 5], [1, 6, 2, 5]]]
+
+    def move(self, movenums):
+        if not type(movenums) == list:
+            movenums = [movenums]
+        for m in movenums:
+            depth = m % 3
             face = m / 3
             axis = face / 2
-            for j in range(depth):
-                if axis != 1:
-                    crot(self, table[face][0])
-                erot(self, axis, table[face][1])
-                cpos(self, table[face][0])
-                epos(self, table[face][1])
+            crot(self, axis, Cube.table[face][0], depth)
+            erot(self, axis, Cube.table[face][1], depth)
+            cpos(self, Cube.table[face][0], depth)
+            epos(self, Cube.table[face][1], depth)
         return self
 
 
