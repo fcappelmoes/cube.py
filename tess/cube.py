@@ -28,22 +28,14 @@
 import numpy
 
 
-def circ(k, indices):  # circulate cubies on indices
-    temp = k[indices[-1]]
-    for i in range(len(indices) - 1)[::-1]:
-        k[indices[i + 1]] = k[indices[i]]
-    k[indices[0]] = temp
-    return k
-
+#matrices used for repositioning cubies (both kinds) in lists
 matrix1 = [[0, 0, 0, 1], [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]]
 matrix2 = numpy.dot(matrix1, matrix1)
 matrix3 = numpy.dot(matrix2, matrix1)
 mlist = [matrix1, matrix2, matrix3]
 
-def newcirc(k, indices, depth):
-    m = []
-    for i in indices:
-        m.extend([k[i]])
+def repos(k, indices, depth): #repositions cubies on indices in k with amount of turns depth
+    m = [k[i] for i in indices]
     newm = numpy.dot(mlist[depth], m)
     for i in range(len(indices)):
         k[indices[i]] = newm[i]
@@ -73,13 +65,13 @@ def erot(cube, axis, indices, depth):  # rotate edges
 
 def cpos(cube, indices, depth):  # reposition corners
     for i in [cube.cp, cube.cr]:
-        newcirc(i, indices, depth)
+        repos(i, indices, depth)
     return cube
 
 
 def epos(cube, indices, depth):  # reposition edges
     for i in [cube.ep, cube.er]:
-        newcirc(i, indices, depth)
+        repos(i, indices, depth)
     return cube
 
 
