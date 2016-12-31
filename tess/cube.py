@@ -21,20 +21,20 @@
 #  0     1     2     3     4     5     6     7     8     9     10    11
 # True  True  True  True  True  True  True  True  True  True  True  True
 
-#moves are numbered 0 to 17:
+# moves are numbered 0 to 17:
 #  F  F2  Fc     B  B2  Bc     U  U2  Uc     D  D2  Dc     L  L2  Lc     R  R2  Rc
 #  0   1   2     3   4   5     6   7   8     9  10  11    12  13  14    15  16  17
 
 import numpy
 
-
-#matrices used for repositioning cubies (both kinds) in lists
+# matrices used for repositioning cubies (both kinds) in lists
 matrix1 = [[0, 0, 0, 1], [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]]
 matrix2 = numpy.dot(matrix1, matrix1)
 matrix3 = numpy.dot(matrix2, matrix1)
 mlist = [matrix1, matrix2, matrix3]
 
-def repos(k, indices, depth): #repositions cubies on indices in k with amount of turns depth
+
+def repos(k, indices, depth):  # repositions cubies on indices in k with amount of turns depth
     m = [k[i] for i in indices]
     newm = numpy.dot(mlist[depth], m)
     for i in range(len(indices)):
@@ -97,7 +97,7 @@ def present_moves(numlist):
     movelist = []
     for num in numlist:
         m = ""
-        m += faces[num/3]
+        m += faces[num / 3]
         if num % 3 == 1:
             m += "2"
         elif num % 3 == 2:
@@ -143,3 +143,53 @@ class Cube(object):
         return self
 
 
+# cube input:
+# - All the stickers on the cube have a color and those colours are represented by the first
+#   letter of that color. "red" becomes r, "blue" is b, "green" is g, "yellow" is y, "white" is w
+#   and "orange" is o.
+# - Choose a face to solve to: for instance, if white has already partially been solved,
+#   take white as top face. Then type the letter of that color, followed by the letter of the
+#   front face and the letter of the left face, followed by a whitespace.
+# - Start with the top face by typing the letters representing the colors. Type in a circle,
+#   starting with the top left corner (which is adjacent to the back and left face) and going
+#   clockwise. All letters must be typed without whitespaces in between. End with a whitespace to
+#   distinguish this face from other faces to come. The middle sticker isn't needed, so you
+#   should now have three characters, a whitespace, eight characters and then another whitespace.
+# - The next face is the bottom face. Again start with the top left corner (adjacent to the front
+#   and left face) and continue clockwise). Again don't use whitespaces until the end.
+# - Now do the front and back faces (in that order) starting with the top left corners adjacent
+#   to top and left faces and top and right faces, respectively. Circle clockwise and use
+#   whitespaces to distinguish the faces.
+# - Finally, input the left and right faces (again in order) starting with the top left corners
+#   adjacent to the top and back faces and the top and front faces, respectively. Use a
+#   whitespace to distinguish the two faces from each other but since no further input is needed,
+#   don't type a whitespace at the end.
+
+trans = "wybgro"
+c_table = [[6, 0, 2], [4, 2, 0], [2, 0, 2], [0, 2, 0],
+           [0, 6, 4], [2, 4, 6], [4, 6, 4], [6, 4, 6]]
+e_table = [[7, 1], [3, 1], [3, 5], [7, 5],
+           [7, 3], [3, 7], [7, 3], [3, 7],
+           [5, 1], [1, 1], [5, 5], [1, 5]]
+
+def counter(num):
+    return num + 1 - (num % 2) * 2
+
+def input_cube(arg=None):
+    if arg == None:
+        arg = raw_input("Input your cube as per instructions above")
+    print arg
+    facelist = arg.lower().split()
+    ind = facelist.pop(0)
+    for i in range(6):
+        if ind[0] == trans[i]:
+            u = ind[0]
+            d = trans[counter(trans.index(u))]
+        if ind[1] == trans[i]:
+            f = ind[1]
+            b = trans[counter(trans.index(f))]
+        if ind[2] == trans[i]:
+            l = ind[2]
+            r = trans[counter(trans.index(l))]
+    faces = [u, d, f, b, l, r]
+    return
