@@ -26,6 +26,7 @@
 #  0   1   2     3   4   5     6   7   8     9  10  11    12  13  14    15  16  17
 
 import numpy
+import string
 
 # matrices used for repositioning cubies (both kinds) in lists
 matrix1 = [[0, 0, 0, 1], [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]]
@@ -75,8 +76,8 @@ def epos(cube, indices, depth):  # reposition edges
     return cube
 
 
-def parse_moves(string):
-    moves = string.lower().split()
+def parse_moves(movestring):
+    moves = movestring.lower().split()
     faces = ["f", "b", "u", "d", "l", "r"]
     facedict = {faces[i]: i for i in range(6)}
     numlist = []
@@ -121,7 +122,7 @@ class Cube(object):
             self.ep = [i for i in range(12)]
             self.er = [True for i in range(12)]
 
-    # table[moves][axis, corners, edges]
+    # table[moves][corners, edges]
     table = [[[0, 1, 5, 4], [8, 5, 11, 4]],
              [[2, 3, 7, 6], [9, 7, 10, 6]],
              [[3, 2, 1, 0], [9, 1, 8, 0]],
@@ -166,21 +167,43 @@ class Cube(object):
 #   don't type a whitespace at the end.
 
 trans = "wybgro"
-c_table = [[6, 0, 2], [4, 2, 0], [2, 0, 2], [0, 2, 0],
-           [0, 6, 4], [2, 4, 6], [4, 6, 4], [6, 4, 6]]
-e_table = [[7, 1], [3, 1], [3, 5], [7, 5],
-           [7, 3], [3, 7], [7, 3], [3, 7],
-           [5, 1], [1, 1], [5, 5], [1, 5]]
+c_table = [[[6, 0, 2], [4, 2, 0], [2, 0, 2], [0, 2, 0],
+            [0, 6, 4], [2, 4, 6], [4, 6, 4], [6, 4, 6]],
+           [[0,2,4], [0,2,5], [0,3,5], [0,3,4],
+            [1,2,4], [1,2,5], [1,3,5], [1,3,4]]]
+e_table = [[[7, 1], [3, 1], [3, 5], [7, 5],
+            [7, 3], [3, 7], [7, 3], [3, 7],
+            [5, 1], [1, 1], [5, 5], [1, 5]],
+           [[0,4], [0,5], [1,5], [1,4],
+            [2,4], [2,5], [3,5], [3,4],
+            [0,2], [0,3], [1,3], [1,2]]]
+corners = ['ufl', 'ufr', 'ubr', 'ubl', 'dfl', 'dfr', 'dbr', 'dbl']
+edges = ['ul', 'ur', 'dr', 'dl', 'fl', 'fr', 'br', 'bl', 'uf', 'ub', 'db', 'df']
+
 
 def counter(num):
     return num + 1 - (num % 2) * 2
 
+def sort(letters, order="udfblr"):
+    d = list(order)
+    l = []
+    for i in letters:
+        l.append(d.index(i))
+    l.sort()
+    new = ""
+    for i in l:
+        new += d[i]
+    return new
+
+#input cube as per instructions
 def input_cube(arg=None):
-    if arg == None:
+    #inputting cube, splitting cube into faces, splitting settings from cube
+    if arg is None:
         arg = raw_input("Input your cube as per instructions above")
-    print arg
     facelist = arg.lower().split()
     ind = facelist.pop(0)
+
+    #translating input to face names
     for i in range(6):
         if ind[0] == trans[i]:
             u = ind[0]
@@ -191,5 +214,42 @@ def input_cube(arg=None):
         if ind[2] == trans[i]:
             l = ind[2]
             r = trans[counter(trans.index(l))]
-    faces = [u, d, f, b, l, r]
+    faces = u + d + f + b + l + r
+    tab = string.maketrans(faces, "udfblr")
+    newarg = []
+    for i in facelist:
+        newarg.append(i.translate(tab))
+
+    #creating lists with cubienames
+    corner_list = []
+    for i in range(8):
+        name = ""
+        for j in range(3):
+            name += newarg[c_table[1][i][j]][c_table[0][i][j]]
+        corner_list.append(name)
+    edge_list = []
+    for i in range(12):
+        name = ""
+        for j in range(2):
+            name += newarg[e_table[1][i][j]][e_table[0][i][j]]
+        edge_list.append(name)
+
+    #sorting cubienames
+    corner_names = []
+    for i in corner_list:
+        corner_names.append(sort(i))
+    edge_names = []
+    for i in edge_list:
+        edge_names.append(sort(i))
+
+    #translating names to numbers
+    corner_numbers = []
+    for i in corner_names:
+        corner_numbers.append(corners.index(i))
+    edge_numbers = []
+    for i in edge_names:
+        edge_numbers.append(edges.index(i))
+
+    print corner_numbers
+    print edge_numbers
     return
