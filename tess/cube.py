@@ -185,15 +185,7 @@ def counter(num):
     return num + 1 - (num % 2) * 2
 
 def sort(letters, order="udfblr"):
-    d = list(order)
-    l = []
-    for i in letters:
-        l.append(d.index(i))
-    l.sort()
-    new = ""
-    for i in l:
-        new += d[i]
-    return new
+    return "".join(sorted(letters, key=lambda x: order.index(x)))
 
 #input cube as per instructions
 def input_cube(arg=None):
