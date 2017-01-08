@@ -169,14 +169,14 @@ class Cube(object):
 trans = "wybgro"
 c_table = [[[6, 0, 2], [4, 2, 0], [2, 0, 2], [0, 2, 0],
             [0, 6, 4], [2, 4, 6], [4, 6, 4], [6, 4, 6]],
-           [[0,2,4], [0,2,5], [0,3,5], [0,3,4],
-            [1,2,4], [1,2,5], [1,3,5], [1,3,4]]]
+           [[0, 2, 4], [0, 2, 5], [0, 3, 5], [0, 3, 4],
+            [1, 2, 4], [1, 2, 5], [1, 3, 5], [1, 3, 4]]]
 e_table = [[[7, 1], [3, 1], [3, 5], [7, 5],
             [7, 3], [3, 7], [7, 3], [3, 7],
             [5, 1], [1, 1], [5, 5], [1, 5]],
-           [[0,4], [0,5], [1,5], [1,4],
-            [2,4], [2,5], [3,5], [3,4],
-            [0,2], [0,3], [1,3], [1,2]]]
+           [[0, 4], [0, 5], [1, 5], [1, 4],
+            [2, 4], [2, 5], [3, 5], [3, 4],
+            [0, 2], [0, 3], [1, 3], [1, 2]]]
 corners = ['ufl', 'ufr', 'ubr', 'ubl', 'dfl', 'dfr', 'dbr', 'dbl']
 edges = ['ul', 'ur', 'dr', 'dl', 'fl', 'fr', 'br', 'bl', 'uf', 'ub', 'db', 'df']
 
@@ -184,18 +184,20 @@ edges = ['ul', 'ur', 'dr', 'dl', 'fl', 'fr', 'br', 'bl', 'uf', 'ub', 'db', 'df']
 def counter(num):
     return num + 1 - (num % 2) * 2
 
+
 def sort(letters, order="udfblr"):
     return "".join(sorted(letters, key=lambda x: order.index(x)))
 
-#input cube as per instructions
+
+# input cube as per instructions
 def input_cube(arg=None):
-    #inputting cube, splitting cube into faces, splitting settings from cube
+    # inputting cube, splitting cube into faces, splitting settings from cube
     if arg is None:
         arg = raw_input("Input your cube as per instructions above")
     facelist = arg.lower().split()
     ind = facelist.pop(0)
 
-    #translating input to face names
+    # translating input to face names
     for i in range(6):
         if ind[0] == trans[i]:
             u = ind[0]
@@ -212,7 +214,7 @@ def input_cube(arg=None):
     for i in facelist:
         newarg.append(i.translate(tab))
 
-    #creating lists with cubienames
+    # creating lists with cubienames
     corner_list = []
     for i in range(8):
         name = ""
@@ -226,22 +228,11 @@ def input_cube(arg=None):
             name += newarg[e_table[1][i][j]][e_table[0][i][j]]
         edge_list.append(name)
 
-    #sorting cubienames
-    corner_names = []
-    for i in corner_list:
-        corner_names.append(sort(i))
-    edge_names = []
-    for i in edge_list:
-        edge_names.append(sort(i))
-
-    #translating names to numbers
+    # creating lists with cubienumbers
     corner_numbers = []
-    for i in corner_names:
-        corner_numbers.append(corners.index(i))
+    for i in corner_list:
+        corner_numbers.append(corners.index(sort(i)))
     edge_numbers = []
-    for i in edge_names:
-        edge_numbers.append(edges.index(i))
-
-    print corner_numbers
-    print edge_numbers
+    for i in edge_list:
+        edge_numbers.append(edges.index(sort(i)))
     return
