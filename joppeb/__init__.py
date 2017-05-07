@@ -43,8 +43,8 @@ surfaces = (
 
 class Cuby(object):
     def __init__(self, position):
-        self.points = [[vertices[v][0] + position[0], vertices[v][1] + position[1], vertices[v][2] + position[2]] for v
-                       in range(8)]
+        self.points = [[vertices[v][0] + position[0], vertices[v][1] + position[1],
+                        vertices[v][2] + position[2]] for v in range(8)]
 
     def reset(self, c):
         for v in range(8):
@@ -81,7 +81,8 @@ def rotatePoint(point, xi, yi, hr):
 def mustSnap(point, xi, yi):
     x = math.fabs(point[xi])
     y = math.fabs(point[yi])
-    return (math.fabs(2 - x) < dif or math.fabs(0 - x) < dif) and (math.fabs(2 - y) < dif or math.fabs(0 - y) < dif)
+    return (math.fabs(2 - x) < dif or math.fabs(0 - x) < dif)\
+           and (math.fabs(2 - y) < dif or math.fabs(0 - y) < dif)
 
 
 def rotateCuby(cuby, xi, yi, hr):
@@ -121,7 +122,8 @@ def rotateCube(xyz, a, hr, b):
     if b == False:
         hr = -hr
     for cuby in [cuby for cuby in vcube if
-                 len([p for p in cuby.points if (a and p[xyz] >= 0) or (not a and p[xyz] <= 0)]) == 8]:
+                 len([p for p in cuby.points if
+                      (a and p[xyz] >= 0) or (not a and p[xyz] <= 0)]) == 8]:
         rotateCuby(cuby, xi, yi, hr)
 
 

@@ -76,19 +76,19 @@ def epos(cube, indices, depth):  # reposition edges
     return cube
 
 
+# imput moves with space in between
 def parse_moves(movestring):
     moves = movestring.lower().split()
+    print moves
     faces = ["f", "b", "u", "d", "l", "r"]
-    facedict = {faces[i]: i for i in range(6)}
     numlist = []
     for m in moves:
-        num = 0
-        if m[0] in faces:
-            num = facedict[m]
-        if m == "2":
-            num += 1
-        elif m[1] == "c" or m[1] == "'":
-            num += 2
+        num = 3 * faces.index(m[0])
+        if len(m) > 1:
+            if m[1] == "2":
+                num += 1
+            elif m[1] == "c" or m[1] == "'":
+                num += 2
         numlist.append(num)
     return numlist
 
@@ -157,7 +157,7 @@ class Cube(object):
 #   distinguish this face from other faces to come. The middle sticker isn't needed, so you
 #   should now have three characters, a whitespace, eight characters and then another whitespace.
 # - The next face is the bottom face. Again start with the top left corner (adjacent to the front
-#   and left face) and continue clockwise). Again don't use whitespaces until the end.
+#   and left face) and continue clockwise. Again don't use whitespaces until the end.
 # - Now do the front and back faces (in that order) starting with the top left corners adjacent
 #   to top and left faces and top and right faces, respectively. Circle clockwise and use
 #   whitespaces to distinguish the faces.
@@ -198,6 +198,7 @@ def input_cube(arg=None):
     ind = facelist.pop(0)
 
     # translating input to face names
+    u = d = f = b = l = r = []
     for i in range(6):
         if ind[0] == trans[i]:
             u = ind[0]
