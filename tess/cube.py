@@ -1,50 +1,54 @@
 #!/usr/bin/env python
 
-# cube consists of two lists: corners and edges
+# cube consists of one or two lists depending on its size:
+#   size 2 --> only corners
+#   size 3 --> corners and edges
 # all cubies are identified by a number
-# corner positions are indicated by the position of the cubie in the list
+# corner locations are indicated by the location of the cubie in the list
 # corner rotations are:
 #  - 0 if up or down sticker in up or down face
 #  - 1 if up or down sticker left with up or down face up
 #  - 2 if up or down sticker right with up or down face up
-# edge positions are indicated by the position of the cubie in the list
+# edge locations are indicated by the location of the cubie in the list
 # edge rotations are:
-#  - True if sticker adjacent to own or opposite center
-#  - False if sticker not adjacent to own or opposite center
+#  - 1 if sticker adjacent to own or opposite center
+#  - 0 if sticker not adjacent to own or opposite center
 
-# corners: order, position, rotation:
-# "ufl", "ufr", "ubr", "ubl", "dfl", "dfr", "dbr", "dbl"
+# when solved, the cube looks like this:
+# corners: order, location, rotation:
+# "ubl", "ubr", "ufr", "ufl", "dbl", "dbr", "dfr", "dfl"
 #   0      1      2      3      4      5      6      7
 #   0      0      0      0      0      0      0      0
-# edges: order, position, rotation:
-# "ul", "ur", "dr", "dl", "uf", "ub", "db", "df", "fl", "fr", "br", "bl"
+# edges: order, location, rotation:
+# "bl", "br", "fr", "fl", "ul", "ur", "dr", "dl", "ub", "uf", "df", "db"
 #  0     1     2     3     4     5     6     7     8     9     10    11
-# True  True  True  True  True  True  True  True  True  True  True  True
+#  1     1     1     1     1     1     1     1     1     1      1     1
 
 # moves are numbered 0 to 17:
-#  F  F2  Fc     B  B2  Bc     U  U2  Uc     D  D2  Dc     L  L2  Lc     R  R2  Rc
+#  U  U2  Uc     D  D2  Dc     F  F2  Fc     B  B2  Bc     L  L2  Lc     R  R2  Rc
 #  0   1   2     3   4   5     6   7   8     9  10  11    12  13  14    15  16  17
 
 import numpy
 import string
 
-# matrices used for repositioning cubies (both kinds) in lists
+# matrices used for relocating cubies (both kinds) in lists
 matrix1 = [[0, 0, 0, 1], [1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]]
 matrix2 = numpy.dot(matrix1, matrix1)
 matrix3 = numpy.dot(matrix2, matrix1)
-mlist = [matrix1, matrix2, matrix3]
+matlist = [matrix1, matrix2, matrix3]
 
 
-def repos(k, indices, depth):  # repositions cubies on indices in k with amount of turns depth
+# works
+def reposition(k, indices, depth):  # repositions cubies on indices in k with amount of turns depth
     m = [k[i] for i in indices]
-    newm = numpy.dot(mlist[depth], m)
+    newm = numpy.dot(matlist[depth], m)
     for i in range(len(indices)):
         k[indices[i]] = newm[i]
     return k
 
 
 def crot(cube, axis, indices, depth):  # rotate corners if not in up or down face
-    if depth != 1 and axis != 1:
+    if depth != 1 and axis != 0:
         for i in range(0, len(indices), 2):
             cube.cr[indices[i]] = (cube.cr[indices[i]] + 2) % 3
         for i in range(1, len(indices), 2):
@@ -61,19 +65,35 @@ def erot(cube, axis, indices, depth):  # rotate edges
             if cubie in m:
                 i = cube.ep.index(cubie)
                 cube.er[i] = not cube.er[i]
-        return cube
+    return cube
 
 
+# not necessary
 def cpos(cube, indices, depth):  # reposition corners
     for i in [cube.cp, cube.cr]:
         repos(i, indices, depth)
     return cube
 
-
+# not necessary
 def epos(cube, indices, depth):  # reposition edges
     for i in [cube.ep, cube.er]:
         repos(i, indices, depth)
     return cube
+
+#difficult version of reposition when I still worked with bools, now not necessary
+# relocates items in list i on indices k with
+def relocate(i, indices, depth):
+    ind = [i[k] for k in indices]
+    temp = numpy.transpose(numpy.dot(matlist[depth], ind))
+    if type(i[0]) == bool:
+        new = []
+        for x in temp:
+            new.append(bool(x))
+    else:
+        new = temp
+    for y in range(len(indices)):
+        i[indices[y]] = new[y]
+    return i
 
 
 # imput moves with space in between
@@ -107,6 +127,23 @@ def present_moves(numlist):
     moves = " ".join(movelist)
     return moves
 
+# not necessary
+def testmove(movenums):
+    cube = Cube(3)
+    if not type(movenums) == list:
+        movenums = [movenums]
+    for m in movenums:
+        depth = m % 3
+        face = m / 3
+        axis = m / 6
+        # rotating cubies that need a rotation (doesn't relocate said rotated cubies)
+        crot(cube, axis, Cube.table[face][0], depth)
+        erot(cube, axis, Cube.table[face][1], depth)
+        # relocating items in ALL lists
+        cubelist = [cube.cp, cube.cr, cube.ep, cube.er]
+        for i in range(4):
+            reposition(cubelist[i], Cube.table[face][i / 2], depth)
+    return cube
 
 def printit(cube):  # print cube
     for i in [cube.cp, cube.cr, cube.ep, cube.er]:
@@ -120,15 +157,15 @@ class Cube(object):
         self.cr = [0] * 8
         if size == 3:
             self.ep = [i for i in range(12)]
-            self.er = [True for i in range(12)]
+            self.er = [1 for i in range(12)]
 
     # table[moves][corners, edges]
-    table = [[[0, 1, 5, 4], [8, 5, 11, 4]],
-             [[2, 3, 7, 6], [9, 7, 10, 6]],
-             [[3, 2, 1, 0], [9, 1, 8, 0]],
-             [[4, 5, 6, 7], [11, 2, 10, 3]],
-             [[3, 0, 4, 7], [0, 4, 3, 7]],
-             [[1, 2, 6, 5], [1, 6, 2, 5]]]
+    table = [[[0, 1, 2, 3], [8, 5, 9, 4]],
+             [[7, 6, 5, 4], [10, 6, 11, 7]],
+             [[3, 2, 6, 7], [9, 2, 10, 3]],
+             [[1, 0, 4, 5], [8, 0, 11, 1]],
+             [[0, 3, 7, 4], [4, 3, 7, 0]],
+             [[2, 1, 5, 6], [5, 1, 6, 2]]]
 
     def move(self, movenums):
         if not type(movenums) == list:
@@ -136,12 +173,22 @@ class Cube(object):
         for m in movenums:
             depth = m % 3
             face = m / 3
-            axis = face / 2
+            axis = m / 6
+            # rotating cubies that need a rotation (doesn't relocate said rotated cubies)
             crot(self, axis, Cube.table[face][0], depth)
             erot(self, axis, Cube.table[face][1], depth)
-            cpos(self, Cube.table[face][0], depth)
-            epos(self, Cube.table[face][1], depth)
+            # relocating items in ALL lists
+            cubelist = [self.cp, self.cr, self.ep, self.er]
+            for i in range(4):
+                repos(cubelist[i], Cube.table[face][i/2], depth)
         return self
+
+    def __repr__(self):
+        s = "cp " + str(self.cp) + "\n"
+        s += "cr " + str(self.cr) + "\n"
+        s += "ep " + str(self.ep) + "\n"
+        s += "er " + str(self.er)
+        return s
 
 
 # cube input:
@@ -167,10 +214,10 @@ class Cube(object):
 #   don't type a whitespace at the end.
 
 trans = "wybgro"
-c_table = [[[6, 0, 2], [4, 2, 0], [2, 0, 2], [0, 2, 0],
-            [0, 6, 4], [2, 4, 6], [4, 6, 4], [6, 4, 6]],
-           [[0, 2, 4], [0, 2, 5], [0, 3, 5], [0, 3, 4],
-            [1, 2, 4], [1, 2, 5], [1, 3, 5], [1, 3, 4]]]
+c_table = [[[6, 2, 0], [4, 2, 0], [2, 2, 0], [0, 2, 0],  # stickernumbers
+            [0, 6, 4], [2, 6, 4], [4, 6, 4], [6, 6, 4]],
+           [[0, 4, 2], [0, 2, 5], [0, 5, 3], [0, 3, 4],  # facenumbers
+            [1, 2, 4], [1, 5, 2], [1, 3, 5], [1, 4, 3]]]
 e_table = [[[7, 1], [3, 1], [3, 5], [7, 5],
             [7, 3], [3, 7], [7, 3], [3, 7],
             [5, 1], [1, 1], [5, 5], [1, 5]],
@@ -193,9 +240,10 @@ def sort(letters, order="udfblr"):
 def input_cube(arg=None):
     # inputting cube, splitting cube into faces, splitting settings from cube
     if arg is None:
-        arg = raw_input("Input your cube as per instructions above")
+        arg = raw_input("Input your cube as per instructions \n")
     facelist = arg.lower().split()
     ind = facelist.pop(0)
+    print facelist
 
     # translating input to face names
     u = d = f = b = l = r = []
@@ -214,26 +262,39 @@ def input_cube(arg=None):
     newarg = []
     for i in facelist:
         newarg.append(i.translate(tab))
+    print newarg
 
     # creating lists with cubienames
-    corner_list = []
+    cornernames = []
     for i in range(8):
         name = ""
         for j in range(3):
             name += newarg[c_table[1][i][j]][c_table[0][i][j]]
-        corner_list.append(name)
+        cornernames.append(name)
     edge_list = []
     for i in range(12):
         name = ""
         for j in range(2):
             name += newarg[e_table[1][i][j]][e_table[0][i][j]]
         edge_list.append(name)
+    print cornernames
+    print edge_list
 
     # creating lists with cubienumbers
     corner_numbers = []
-    for i in corner_list:
+    for i in cornernames:
         corner_numbers.append(corners.index(sort(i)))
     edge_numbers = []
     for i in edge_list:
         edge_numbers.append(edges.index(sort(i)))
+
+    # corner rotations
+    corner_rot = []
+    for i in cornernames:
+        x = list(i)
+        corner_rot.append(x.index("u" or "d"))
+
+    # edge rotations
+    edge_rot = []
+
     return
